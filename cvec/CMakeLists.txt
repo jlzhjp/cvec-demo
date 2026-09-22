@@ -20,17 +20,38 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_executable(
-    cvec_test
-    tests/cvec_test.cpp
-)
+if (BUILD_TESTING)
+    add_executable(
+        cvec_test
+        tests/cvec_test.cpp
+    )
 
-target_link_libraries(
-    cvec_test
-    PRIVATE
-    cvec
-    GTest::gtest_main
-)
+    target_link_libraries(
+        cvec_test
+        PRIVATE
+        cvec
+        GTest::gtest_main
+    )
 
-include(GoogleTest)
-gtest_discover_tests(cvec_test)
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang"
+       AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(cvec PRIVATE
+            $<$<CONFIG:Debug>:-fsanitize=address,undefined>
+            $<$<CONFIG:Debug>:-fno-sanitize-recover=undefined>
+            $<$<CONFIG:Debug>:-fno-omit-frame-pointer>
+        )
+
+        target_compile_options(cvec_test PRIVATE
+            $<$<CONFIG:Debug>:-fsanitize=address,undefined>
+            $<$<CONFIG:Debug>:-fno-sanitize-recover=undefined>
+            $<$<CONFIG:Debug>:-fno-omit-frame-pointer>
+        )
+
+        target_link_options(cvec_test PRIVATE
+            $<$<CONFIG:Debug>:-fsanitize=address,undefined>
+        )
+    endif()
+
+    include(GoogleTest)
+    gtest_discover_tests(cvec_test)
+endif()
